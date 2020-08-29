@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "env": {},
+            "args": ["applyto","ws://localhost:5000/api/manager","localhost:8888", "3105366776"]
+        }
+    ]
+}
