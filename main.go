@@ -126,12 +126,6 @@ func getUserName(id string) (string, error) {
 	}
 	return u.Nickname, nil
 }
-func login() error {
-	return errors.New("not supported")
-}
-func logout() error {
-	return errors.New("not supported")
-}
 
 type MsgPacket struct {
 	Content      string
@@ -599,8 +593,6 @@ func main() {
 		return &ubot.Account{
 			GetGroupName:    getGroupName,
 			GetUserName:     getUserName,
-			Login:           login,
-			Logout:          logout,
 			SendChatMessage: sendChatMessage,
 			RemoveMember:    removeMember,
 			ShutupMember:    shutupMember,
