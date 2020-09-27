@@ -130,6 +130,7 @@ func getUserName(id string) (string, error) {
 type MsgPacket struct {
 	Content      string
 	PicUrl       string
+	PicBase64    string
 	ForwardField int
 	ForwardBuf   string
 }
@@ -158,6 +159,12 @@ func sendChatMessagePackets(msgType ubot.MsgType, source string, target string, 
 			data["sendMsgType"] = "PicMsg"
 			data["picUrl"] = packet.PicUrl
 			data["picBase64Buf"] = ""
+			data["fileMd5"] = ""
+			data["flashPic"] = 0
+		case packet.PicBase64 != "":
+			data["sendMsgType"] = "PicMsg"
+			data["picUrl"] = ""
+			data["picBase64Buf"] = packet.PicBase64
 			data["fileMd5"] = ""
 			data["flashPic"] = 0
 		default:
@@ -191,6 +198,26 @@ func sendChatMessage(msgType ubot.MsgType, source string, target string, message
 	entities := ubot.ParseMsg(message)
 	packets := make([]*MsgPacket, 0, 2)
 	packet := &MsgPacket{}
+	imagePacket := func(setter func()) {
+		if !packet.IsEmpty() {
+			if packet.PicUrl != "" || packet.PicBase64 != "" {
+				packets = append(packets, packet)
+				packet = &MsgPacket{}
+				setter()
+			} else if packet.Content != "" { //由于第一个判断不成立，此时消息处于无图状态
+				packet.Content = "[PICFLAG]" + packet.Content
+				setter()
+				packets = append(packets, packet)
+				packet = &MsgPacket{}
+			} else {
+				packets = append(packets, packet)
+				packet = &MsgPacket{}
+				setter()
+			}
+		} else {
+			setter()
+		}
+	}
 	for _, entity := range entities {
 		switch entity.Type {
 		case "text":
@@ -204,24 +231,13 @@ func sendChatMessage(msgType ubot.MsgType, source string, target string, message
 				packet.Content += fmt.Sprintf("[ATUSER(%s)]", entity.Data)
 			}
 		case "image_online":
-			if !packet.IsEmpty() {
-				if packet.PicUrl != "" {
-					packets = append(packets, packet)
-					packet = &MsgPacket{}
-					packet.PicUrl = entity.Data
-				} else if packet.Content != "" { //由于第一个判断不成立，此时消息处于无图状态
-					packet.Content = "[PICFLAG]" + packet.Content
-					packet.PicUrl = entity.Data
-					packets = append(packets, packet)
-					packet = &MsgPacket{}
-				} else {
-					packets = append(packets, packet)
-					packet = &MsgPacket{}
-					packet.PicUrl = entity.Data
-				}
-			} else {
+			imagePacket(func() {
 				packet.PicUrl = entity.Data
-			}
+			})
+		case "image_base64":
+			imagePacket(func() {
+				packet.PicBase64 = entity.Data
+			})
 		case "big_face":
 			if !packet.IsEmpty() {
 				packets = append(packets, packet)
