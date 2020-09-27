@@ -245,11 +245,11 @@ func sendChatMessage(msgType ubot.MsgType, source string, target string, message
 			}
 			pComma := strings.IndexByte(entity.Data, ',')
 			if pComma == -1 {
-				return errors.New("invaild big_face entity")
+				return errors.New("invalid big_face entity")
 			}
 			forwardField, err := strconv.Atoi(entity.Data[:pComma])
 			if err != nil {
-				return errors.New("invaild big_face entity")
+				return errors.New("invalid big_face entity")
 			}
 			forwardBuf := entity.Data[pComma+1:]
 			packets = append(packets, &MsgPacket{ForwardField: forwardField, ForwardBuf: forwardBuf})
